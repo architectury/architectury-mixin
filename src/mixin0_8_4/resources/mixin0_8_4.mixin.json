@@ -1,0 +1,8 @@
+{
+  "compatibilityLevel": "JAVA_8",
+  "package": "dev.architectury.patchedmixin.mixin",
+  "mixins": [
+    "MixinMixinConfig",
+    "v00804.MixinRemappingReferenceMapper"
+  ]
+}

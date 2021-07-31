@@ -1,0 +1,118 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import me.shedaniel.staticmixin.tasks.MixinPatchTask
+
+plugins {
+    id "java"
+    id "idea"
+    id "eclipse"
+    id "maven-publish"
+    id "java-gradle-plugin"
+    id "org.cadixdev.licenser" version "0.6.1"
+    id "com.github.johnrengelman.shadow" version "7.0.0"
+    id "me.shedaniel.static-mixin" version "1.0.+"
+}
+
+group "me.shedaniel"
+
+def runNumber = System.getenv("GITHUB_RUN_NUMBER") ?: "9999"
+
+version = base_version + "." + runNumber
+
+logger.lifecycle(":building java-version-bridge v${version}")
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = "UTF-8"
+    it.options.release = 8
+}
+
+repositories {
+    maven { url "https://maven.architectury.dev/" }
+    maven { url "https://repo.spongepowered.org/repository/maven-public/" }
+    gradlePluginPortal()
+    mavenLocal()
+}
+
+license {
+    header = rootProject.file("HEADER")
+
+    ext {
+        name = "Mixin"
+        organization = "architectury, FabricMC, SpongePowered"
+        year = "2019, 2020, 2021"
+    }
+
+    include "**/*.java"
+}
+
+def patchingVersions = ["0.8.2", "0.8.4"]
+
+dependencies {
+    compileOnly "me.shedaniel:static-mixin:1.0.+"
+    def asm_version = '9.2'
+    compileOnly "org.ow2.asm:asm:$asm_version"
+    compileOnly "org.ow2.asm:asm-analysis:$asm_version"
+    compileOnly "org.ow2.asm:asm-commons:$asm_version"
+    compileOnly "org.ow2.asm:asm-tree:$asm_version"
+    compileOnly "org.ow2.asm:asm-util:$asm_version"
+}
+
+jar {
+    archiveClassifier = "raw"
+}
+
+sourceSets {
+    mixincommon {
+        compileClasspath += sourceSets.main.compileClasspath
+        dependencies.add(compileClasspathConfigurationName, "org.spongepowered:mixin:0.8.4")
+    }
+}
+
+task patchMixin(type: MixinPatchTask, dependsOn: "jar") {
+    
+}
+
+patchingVersions.each { version ->
+    def name = "mixin" + version.replace('.', '_')
+    def sourceSet = sourceSets.create(name)
+    sourceSet.compileClasspath += sourceSets.main.compileClasspath
+    sourceSet.compileClasspath += sourceSets.mixincommon.output
+    def mixin = "org.spongepowered:mixin:" + version
+    def mixinDep = dependencies.add(sourceSet.compileClasspathConfigurationName, mixin)
+    def patchMixin = tasks.register("patchMixin" + version.replace('.', '_'), MixinPatchTask.class) {
+        classpath.from(sourceSet.output + sourceSets.mixincommon.output + sourceSet.compileClasspath)
+        from(sourceSet.output + sourceSets.mixincommon.output + configurations.detachedConfiguration(dependencies.create(mixin)).files.collect { zipTree(it) })
+        mixinConfig name + ".mixin.json"
+        archiveVersion = version
+        archiveClassifier = "patched"
+        group "patch"
+    }
+    def shadowPatchMixin = tasks.register("shadowPatchedMixin" + version.replace('.', '_'), ShadowJar.class) {
+        dependsOn patchMixin
+        from((patchMixin.get().outputs.files + project.configurations.detachedConfiguration(dependencies.create("me.shedaniel:static-mixin:1.0.+")).files).collect { zipTree(it) })
+        archiveVersion = version
+        group "patch"
+    }
+
+    assemble.dependsOn shadowPatchMixin.get()
+}
+
+publishing {
+    publications {
+        main(MavenPublication) {
+            groupId "dev.architectury"
+            artifactId "mixin-patched"
+        }
+    }
+
+    repositories {
+        if (System.getenv("MAVEN_PASS") != null) {
+            maven {
+                url = "https://deploy.shedaniel.me/"
+                credentials {
+                    username = "shedaniel"
+                    password = System.getenv("MAVEN_PASS")
+                }
+            }
+        }
+    }
+}
