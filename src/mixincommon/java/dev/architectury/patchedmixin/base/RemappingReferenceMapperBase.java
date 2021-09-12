@@ -23,18 +23,10 @@
  * THE SOFTWARE.
  */
 
-package dev.architectury.patchedmixin.mixin.v00804;
+package dev.architectury.patchedmixin.base;
 
-import dev.architectury.patchedmixin.base.RemappingReferenceMapperBase;
-import me.shedaniel.staticmixin.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.struct.MemberInfo;
-import org.spongepowered.asm.mixin.refmap.RemappingReferenceMapper;
-import org.spongepowered.asm.util.Quantifier;
 
-@Mixin(RemappingReferenceMapper.class)
-public class MixinRemappingReferenceMapper implements RemappingReferenceMapperBase {
-    @Override
-    public MemberInfo arch$newMemberInfo(String name) {
-        return new MemberInfo(name, Quantifier.DEFAULT);
-    }
+public interface RemappingReferenceMapperBase {
+    MemberInfo arch$newMemberInfo(String name);
 }

@@ -3,6 +3,7 @@
   "package": "dev.architectury.patchedmixin.mixin",
   "mixins": [
     "MixinMixinConfig",
+    "MixinRemappingReferenceMapper",
     "v00802.MixinRemappingReferenceMapper"
   ]
 }

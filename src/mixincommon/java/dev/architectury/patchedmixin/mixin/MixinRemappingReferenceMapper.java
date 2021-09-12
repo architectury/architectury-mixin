@@ -25,6 +25,7 @@
 
 package dev.architectury.patchedmixin.mixin;
 
+import dev.architectury.patchedmixin.base.RemappingReferenceMapperBase;
 import dev.architectury.patchedmixin.refmap.IClassReferenceMapper;
 import me.shedaniel.staticmixin.spongepowered.asm.mixin.*;
 import me.shedaniel.staticmixin.spongepowered.asm.mixin.injection.At;
@@ -41,7 +42,8 @@ import org.spongepowered.asm.mixin.refmap.RemappingReferenceMapper;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class AbstractMixinRemappingReferenceMapper implements IClassReferenceMapper {
+@Mixin(RemappingReferenceMapper.class)
+public abstract class MixinRemappingReferenceMapper implements IClassReferenceMapper, RemappingReferenceMapperBase {
     @Unique
     private IRemapper arch$remapper;
     
@@ -100,8 +102,6 @@ public abstract class AbstractMixinRemappingReferenceMapper implements IClassRef
             return remapped;
         }
     }
-    
-    protected abstract MemberInfo arch$newMemberInfo(String name);
     
     @Unique
     private static String arch$remapMethodDescriptor(IRemapper remapper, String desc) {

@@ -25,15 +25,15 @@
 
 package dev.architectury.patchedmixin.mixin.v00802;
 
-import dev.architectury.patchedmixin.mixin.AbstractMixinRemappingReferenceMapper;
+import dev.architectury.patchedmixin.base.RemappingReferenceMapperBase;
 import me.shedaniel.staticmixin.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.struct.MemberInfo;
 import org.spongepowered.asm.mixin.refmap.RemappingReferenceMapper;
 
 @Mixin(RemappingReferenceMapper.class)
-public class MixinRemappingReferenceMapper extends AbstractMixinRemappingReferenceMapper {
+public class MixinRemappingReferenceMapper implements RemappingReferenceMapperBase {
     @Override
-    protected MemberInfo arch$newMemberInfo(String name) {
+    public MemberInfo arch$newMemberInfo(String name) {
         return new MemberInfo(name, null, null);
     }
 }
