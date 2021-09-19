@@ -29,7 +29,6 @@ repositories {
     maven { url "https://maven.architectury.dev/" }
     maven { url "https://repo.spongepowered.org/repository/maven-public/" }
     gradlePluginPortal()
-    mavenLocal()
 }
 
 license {
@@ -88,7 +87,8 @@ patchingVersions.each { version ->
     }
     def shadowPatchMixin = tasks.register("shadowPatchedMixin" + version.replace('.', '_'), ShadowJar.class) {
         dependsOn patchMixin
-        from((patchMixin.get().outputs.files + project.configurations.detachedConfiguration(dependencies.create("me.shedaniel:static-mixin:1.0.+")).files).collect { zipTree(it) })
+        relocate "me.shedaniel.staticmixin", "dev.architectury.patchedmixin.static"
+        from((patchMixin.get().outputs.files + project.configurations.detachedConfiguration(dependencies.create("me.shedaniel.static-mixin:static-mixin-runtime:1.0.+")).files).collect { zipTree(it) })
         archiveVersion = version
         group "patch"
     }
@@ -98,9 +98,13 @@ patchingVersions.each { version ->
 
 publishing {
     publications {
-        main(MavenPublication) {
-            groupId "dev.architectury"
-            artifactId "mixin-patched"
+        patchingVersions.each { version ->
+            create("mixin" + version.replace('.', '_'), MavenPublication) {
+                groupId "dev.architectury"
+                artifactId "mixin-patched"
+                it.version version + "." + runNumber
+                artifact(this.tasks.getByName("shadowPatchedMixin" + version.replace('.', '_')))
+            }
         }
     }
 
