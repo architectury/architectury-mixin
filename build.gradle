@@ -87,7 +87,7 @@ patchingVersions.each { version ->
     }
     def shadowPatchMixin = tasks.register("shadowPatchedMixin" + version.replace('.', '_'), ShadowJar.class) {
         dependsOn patchMixin
-        relocate "me.shedaniel.staticmixin", "dev.architectury.patchedmixin.static"
+        relocate "me.shedaniel.staticmixin", "dev.architectury.patchedmixin.staticmixin"
         from((patchMixin.get().outputs.files + project.configurations.detachedConfiguration(dependencies.create("me.shedaniel.static-mixin:static-mixin-runtime:1.0.+")).files).collect { zipTree(it) }) {
             exclude "META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.DSA"
         }
