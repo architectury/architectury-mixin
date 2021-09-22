@@ -30,7 +30,6 @@ import dev.architectury.patchedmixin.refmap.IClassReferenceMapper;
 import me.shedaniel.staticmixin.spongepowered.asm.mixin.*;
 import me.shedaniel.staticmixin.spongepowered.asm.mixin.injection.At;
 import me.shedaniel.staticmixin.spongepowered.asm.mixin.injection.Inject;
-import me.shedaniel.staticmixin.spongepowered.asm.mixin.injection.Redirect;
 import me.shedaniel.staticmixin.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.objectweb.asm.Type;
 import org.spongepowered.asm.mixin.MixinEnvironment;
@@ -113,12 +112,6 @@ public abstract class MixinRemappingReferenceMapper implements IClassReferenceMa
         return newDesc.append(')').append(remapper.mapDesc(Type.getReturnType(desc).getDescriptor())).toString();
     }
     
-    @Redirect(method = "of", at = @At(value = "INVOKE",
-                                      target = "Lorg/spongepowered/asm/mixin/refmap/RemappingReferenceMapper;hasData(Lorg/spongepowered/asm/mixin/MixinEnvironment;)Z"))
-    private static boolean arch$dontCheckHasData(MixinEnvironment environment) {
-        return true;
-    }
-    
     @Override
     public String arch$remapClassName(String className, String inputClassName) {
         return arch$remapClassNameWithContext(((RemappingReferenceMapper) (Object) this).getContext(), className, inputClassName);
@@ -133,5 +126,20 @@ public abstract class MixinRemappingReferenceMapper implements IClassReferenceMa
             origInfoString = this.refMap.remapWithContext(context, className, remapped);
         }
         return arch$remapper.map(origInfoString.replace('.', '/'));
+    }
+    
+    @Overwrite
+    private static Map<String, String> loadSrgs(String fileName) {
+        return new HashMap<>();
+    }
+    
+    @Overwrite
+    private static String getResource(MixinEnvironment env) {
+        return "RemapperChain (Architectury Patched)";
+    }
+    
+    @Overwrite
+    private static boolean hasData(MixinEnvironment env) {
+        return true;
     }
 }
