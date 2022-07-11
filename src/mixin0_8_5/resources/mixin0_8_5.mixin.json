@@ -4,6 +4,7 @@
   "mixins": [
     "MixinAnnotatedMixins",
     "MixinMixinConfig",
+    "MixinMixinPreProcessorStandard",
     "MixinRemappingReferenceMapper",
     "v00805.MixinRemappingReferenceMapper"
   ]

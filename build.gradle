@@ -18,7 +18,7 @@ def runNumber = System.getenv("GITHUB_RUN_NUMBER") ?: "9999"
 
 version = base_version + "." + runNumber
 
-logger.lifecycle(":building java-version-bridge v${version}")
+logger.lifecycle(":building architectury-mixin v${version}")
 
 tasks.withType(JavaCompile).configureEach {
     it.options.encoding = "UTF-8"
