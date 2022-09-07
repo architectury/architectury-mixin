@@ -27,7 +27,9 @@ package dev.architectury.patchedmixin.mixin;
 
 import me.shedaniel.staticmixin.spongepowered.asm.mixin.Mixin;
 import me.shedaniel.staticmixin.spongepowered.asm.mixin.injection.At;
+import me.shedaniel.staticmixin.spongepowered.asm.mixin.injection.Coerce;
 import me.shedaniel.staticmixin.spongepowered.asm.mixin.injection.Redirect;
+import me.shedaniel.staticmixin.spongepowered.asm.mixin.injection.Slice;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
@@ -53,5 +55,22 @@ public class MixinMixinPreProcessorStandard {
         int includeStatic = ((fieldNode.getOpcode() == Opcodes.GETSTATIC || fieldNode.getOpcode() == Opcodes.PUTSTATIC) ? ClassInfo.INCLUDE_STATIC : 0);
         return classInfo.findFieldInHierarchy(fieldNode.name, fieldNode.desc, ClassInfo.SearchType.ALL_CLASSES,
                 ClassInfo.Traversal.NONE, flags | includeStatic);
+    }
+
+    // Fix runtime overwrite remapping
+    // https://github.com/FabricMC/Mixin/commit/ec491e3b5d131b657bd095652f0d5195cd33a7cf
+    @Redirect(
+        method = "attachSpecialMethod",
+        at = @At(value = "FIELD", target = "Lorg/spongepowered/asm/mixin/transformer/MixinPreProcessorStandard$SpecialMethod;isOverwrite:Z"),
+        slice = @Slice(
+            from = @At(value = "INVOKE", target = "Lorg/spongepowered/asm/mixin/transformer/MixinTargetContext;findMethod(Lorg/objectweb/asm/tree/MethodNode;Lorg/objectweb/asm/tree/AnnotationNode;)Lorg/objectweb/asm/tree/MethodNode;"),
+            to = @At(value = "INVOKE", target = "Lorg/spongepowered/asm/mixin/transformer/MixinTargetContext;findRemappedMethod(Lorg/objectweb/asm/tree/MethodNode;)Lorg/objectweb/asm/tree/MethodNode;")
+        ),
+        allow = 1
+    )
+    private boolean redirectIsOverwrite(@Coerce Object self) {
+        // Disable the check that prevents overwrites from getting remapped by
+        // pretending the method is not an overwrite
+        return false;
     }
 }
