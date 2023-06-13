@@ -43,6 +43,10 @@ license {
     include "**/*.java"
 }
 
+configurations {
+    include
+}
+
 def patchingVersions = ["0.8.2", "0.8.4", "0.8.5"]
 
 dependencies {
@@ -53,6 +57,9 @@ dependencies {
     compileOnly "org.ow2.asm:asm-commons:$asm_version"
     compileOnly "org.ow2.asm:asm-tree:$asm_version"
     compileOnly "org.ow2.asm:asm-util:$asm_version"
+    include "me.shedaniel.static-mixin:static-mixin-runtime:1.0.+"
+    include "com.google.code.gson:gson:2.2.4"
+    include "com.google.guava:guava:21.0"
 }
 
 jar {
@@ -88,7 +95,8 @@ patchingVersions.each { version ->
     def shadowPatchMixin = tasks.register("shadowPatchedMixin" + version.replace('.', '_'), ShadowJar.class) {
         dependsOn patchMixin
         relocate "me.shedaniel.staticmixin", "dev.architectury.patchedmixin.staticmixin"
-        from((patchMixin.get().outputs.files + project.configurations.detachedConfiguration(dependencies.create("me.shedaniel.static-mixin:static-mixin-runtime:1.0.+")).files).collect { zipTree(it) }) {
+        relocate "com.google", "dev.architectury.patchedmixin.com.google"
+        from((patchMixin.get().outputs.files + project.configurations.include.files).collect { zipTree(it) }) {
             exclude "META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.DSA"
         }
         archiveVersion = version
