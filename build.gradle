@@ -43,10 +43,6 @@ license {
     include "**/*.java"
 }
 
-configurations {
-    include
-}
-
 def patchingVersions = ["0.8.2", "0.8.4", "0.8.5"]
 
 dependencies {
@@ -57,9 +53,6 @@ dependencies {
     compileOnly "org.ow2.asm:asm-commons:$asm_version"
     compileOnly "org.ow2.asm:asm-tree:$asm_version"
     compileOnly "org.ow2.asm:asm-util:$asm_version"
-    include "me.shedaniel.static-mixin:static-mixin-runtime:1.0.+"
-    include "com.google.code.gson:gson:2.2.4"
-    include "com.google.guava:guava:21.0"
 }
 
 jar {
@@ -95,8 +88,7 @@ patchingVersions.each { version ->
     def shadowPatchMixin = tasks.register("shadowPatchedMixin" + version.replace('.', '_'), ShadowJar.class) {
         dependsOn patchMixin
         relocate "me.shedaniel.staticmixin", "dev.architectury.patchedmixin.staticmixin"
-        relocate "com.google", "dev.architectury.patchedmixin.com.google"
-        from((patchMixin.get().outputs.files + project.configurations.include.files).collect { zipTree(it) }) {
+        from((patchMixin.get().outputs.files + project.configurations.detachedConfiguration(dependencies.create("me.shedaniel.static-mixin:static-mixin-runtime:1.0.+")).files).collect { zipTree(it) }) {
             exclude "META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.DSA"
         }
         archiveVersion = version
@@ -106,6 +98,11 @@ patchingVersions.each { version ->
     assemble.dependsOn shadowPatchMixin.get()
 }
 
+def runtimeDeps = [
+    [group: "com.google.code.gson", artifact: "gson", version: "2.2.4"],
+    [group: "com.google.guava", artifact: "guava", version: "21.0"]
+]
+
 publishing {
     publications {
         patchingVersions.each { version ->
@@ -114,6 +111,17 @@ publishing {
                 artifactId "mixin-patched"
                 it.version version + "." + runNumber
                 artifact(this.tasks.getByName("shadowPatchedMixin" + version.replace('.', '_')))
+
+                pom.withXml {
+                    def containerNode = asNode().appendNode("dependencies")
+                    for (def dep in runtimeDeps) {
+                        def node = containerNode.appendNode("dependency")
+                        node.appendNode("groupId", dep.group)
+                        node.appendNode("artifactId", dep.artifact)
+                        node.appendNode("version", dep.version)
+                        node.appendNode("scope", "runtime")
+                    }
+                }
             }
         }
     }
