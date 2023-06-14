@@ -98,6 +98,11 @@ patchingVersions.each { version ->
     assemble.dependsOn shadowPatchMixin.get()
 }
 
+def runtimeDeps = [
+    [group: "com.google.code.gson", artifact: "gson", version: "2.2.4"],
+    [group: "com.google.guava", artifact: "guava", version: "21.0"]
+]
+
 publishing {
     publications {
         patchingVersions.each { version ->
@@ -106,6 +111,17 @@ publishing {
                 artifactId "mixin-patched"
                 it.version version + "." + runNumber
                 artifact(this.tasks.getByName("shadowPatchedMixin" + version.replace('.', '_')))
+
+                pom.withXml {
+                    def containerNode = asNode().appendNode("dependencies")
+                    for (def dep in runtimeDeps) {
+                        def node = containerNode.appendNode("dependency")
+                        node.appendNode("groupId", dep.group)
+                        node.appendNode("artifactId", dep.artifact)
+                        node.appendNode("version", dep.version)
+                        node.appendNode("scope", "runtime")
+                    }
+                }
             }
         }
     }
