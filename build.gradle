@@ -43,7 +43,7 @@ license {
     include "**/*.java"
 }
 
-def patchingVersions = ["0.8.2", "0.8.4", "0.8.5"]
+def patchingVersions = ["0.8.2", "0.8.4", "0.8.5", "0.8.7"]
 
 dependencies {
     compileOnly "me.shedaniel:static-mixin:1.0.+"
