@@ -92,6 +92,12 @@ patchingVersions.each { version ->
             exclude "META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.DSA"
         }
         archiveVersion = version
+        manifest {
+            attributes 'Premain-Class': 'org.spongepowered.tools.agent.MixinAgent',
+                'Agent-Class': 'org.spongepowered.tools.agent.MixinAgent',
+                'Can-Redefine-Classes': 'true',
+                'Can-Retransform-Classes': 'true'
+        }
         group "patch"
     }
 
