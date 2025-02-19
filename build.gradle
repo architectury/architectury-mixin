@@ -3,10 +3,8 @@ import me.shedaniel.staticmixin.tasks.MixinPatchTask
 
 plugins {
     id "java"
-    id "idea"
     id "eclipse"
     id "maven-publish"
-    id "java-gradle-plugin"
     id "org.cadixdev.licenser" version "0.6.1"
     id "com.github.johnrengelman.shadow" version "7.0.0"
     id "me.shedaniel.static-mixin" version "1.0.+"
